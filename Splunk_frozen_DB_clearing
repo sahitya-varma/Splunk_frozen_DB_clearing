@@ -1,0 +1,60 @@
+#bin/bash
+
+set echo off
+
+#Getting the Frozen path from user
+echo "enter your frozen directory path for example /archieve/splunk/var/lib/splunk/*/frozendb/"
+read frozen_directory_path
+
+echo "your frozen path is "$frozen_directory_path
+
+#Getting the Number of days from user
+echo "Enter the how many number of days data you wanted to keep,For example, If you enter 90, then the data older than 90 will be deleted"
+read days_value
+
+one_day_seconds=86400
+
+given_days_epoch=$((days_value * one_day_seconds))
+
+echo the data older than $days_value will be deleted
+
+sleep 5s
+
+#Giving a chance to user to exit the script for 10 seconds
+echo Script will execute in 10 seconds, if you wanted to stop please press ctrl+c to exit the script
+
+sleep 10s
+
+#Calculating the Number of seconds data to be cleared off
+current_epoch=$(date '+%s')
+
+epoch_value_to_delete=$((current_epoch-given_days_epoch))
+
+
+#for loop start, it will go to every directory in the frozendb
+for dir in $frozen_directory_path ; do
+cd $dir
+ls1=$(ls)
+
+  for d in $ls1 ; do
+  bucket_latest_time=$(echo $d | awk '{print substr($0,4,10);exit}')
+  bucket_earliest_time=$(echo $d | awk '{print substr($0,15,10);exit}')
+  #echo "latest time is " "${bucket_latest_time}"
+  #echo "earliest time is " "${bucket_earliest_time}"
+  #echo $d
+
+    if [[ "$bucket_latest_time" -lt  "$epoch_value_to_delete" ]]; then
+
+      #echo "bucket is older"
+      #echo "bucket value is "$d
+      #echo "three month back value" $epoch_value_to_delete
+      #echo "latest event value " $bucket_latest_time
+      #echo "end of if condition"
+      rm -rf $d
+    fi
+
+  done
+
+done
+
+echo "Script Execution Completed"
